@@ -73,37 +73,28 @@ GameView.prototype = {
     _bindEvent: function() {
         var self = this;
         this.game
-            .addListener('add_shape', function() { self._addShape(); })
-            .addListener('shape_dropped', function() { self._shapeDropped(); })
-            .addListener('shape_moved', function() { self._shapeMoved(); })
-            .addListener('shape_landed', function() {
-                self.stage.removeChildren();
-                for (i = 0; i < self.game.width; i++) {
-                    for (var j = 0; j < self.game.height; j++) {
-                        //console.log(this.game.blocks[i][j]);
-                        var block = self.game.blocks[i][j];
-                        if (block) {
-                            var _blockGraphics = new BlockGraphics(block.color);
-                            _blockGraphics.x = block.x * BLOCK_WIDTH;
-                            _blockGraphics.y = block.y * BLOCK_WIDTH;
-                            self.stage.addChild(_blockGraphics)
-                        }
-                    }
-                }
-            })
+            .addListener('add_shape', this._addShape.bind(this))
+            .addListener('shape_dropped', this._shapeDropped.bind(this))
+            .addListener('shape_moved', this._shapeMoved.bind(this))
+            .addListener('shape_rotated', this._shapeRotated.bind(this))
+            .addListener('shape_landed', this._shapeLanded.bind(this))
         window.addEventListener('keydown', function(e) {
+            console.log(e.keyCode);
             switch (e.keyCode) {
-                case 37:
+                case 37: // left
                     self.game.moveLeft();
                     break;
-                case 38:
+                case 38: // top
                     self.game.rotateLeft();
                     break;
-                case 39:
+                case 39: // right
                     self.game.moveRight();
                     break;
-                case 40:
+                case 40: // down
                     self.game.moveDown(true);
+                    break;
+                case 32: // space
+                    self.game.pause = !self.game.pause;
                     break;
             }
         }, false);
@@ -124,6 +115,7 @@ GameView.prototype = {
             shape.addChild(blockGraphics);
             blockGraphics.x = block.x * BLOCK_WIDTH;
             blockGraphics.y = block.y * BLOCK_WIDTH;
+            block.graphics = blockGraphics;
         }, this);
     },
 
@@ -133,6 +125,28 @@ GameView.prototype = {
 
     _shapeMoved: function() {
         this.shape.x = this.game.shape.x * BLOCK_WIDTH;
+    },
+
+    _shapeRotated: function() {
+        this.game.shape.blocks.forEach(function(block) {
+            block.graphics.x = block.x * BLOCK_WIDTH;
+            block.graphics.y = block.y * BLOCK_WIDTH;
+        });
+    },
+
+    _shapeLanded: function(lines, lineBlocks) {
+        lineBlocks.forEach(function(block) {
+            var n = 0,
+                timer;
+            timer = setInterval(function() {
+                block.graphics.alpha = 1 - 1 / 60 * n;
+                block.graphics.scale = new PIXI.Point(1 + 1 / 60 * n, 1 + 1 / 60 * n);
+                n++;
+                if (n > 60) {
+                    clearInterval(timer);
+                }
+            }, 1000 / 60);
+        })
     }
 };
 
@@ -204,6 +218,9 @@ BlockGraphics.prototype.draw = function() {
     //sprite.x = this.color * BLOCK_WIDTH;
     //sprite.y = this.color * BLOCK_WIDTH;
     this.addChild(sprite);
+};
+BlockGraphics.prototype.explode = function() {
+
 };
 
 module.exports = GameView;

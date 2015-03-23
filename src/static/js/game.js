@@ -161,7 +161,14 @@ var blockTable = [
 ];
 
 var Block = function(x, y, color) {
-    this.x  = x;
+    this.x = x;
+    //this.__defineSetter__('x', function(value) {
+    //    console.log('set x');
+    //    this._x = value;
+    //});
+    //this.__defineGetter__('x', function() {
+    //    return this._x;
+    //});
     this.y = y;
     this.color = color
 };
@@ -216,9 +223,8 @@ var Game = function(options) {
     this.__defineSetter__('pause', function(value) {
         this._paused = value;
         if (this._hasStarted) {
-            console.log('started');
+            this._setupDropTimer();
         }
-        console.log('pause')
     });
 
     this.__defineGetter__('shadowY', function() {
@@ -257,8 +263,8 @@ _.extend(Game.prototype, {
                 //}
             //}
         }
-        this.nextShape = this._pickRandomShape();
-        //this.nextShape = this._makeShape(0, 0);
+        //this.nextShape = this._pickRandomShape();
+        this.nextShape = this._makeShape(0, 1);
     },
 
     start: function() {
@@ -393,7 +399,7 @@ _.extend(Game.prototype, {
     _rotateShape: function(rStep) {
         var shape = this.shape;
         var r = shape.rotation + rStep;
-        r = (4 + rStep % 4) % 4;
+        r = (4 + r % 4) % 4;
         if (r !== shape.rotation) {
             shape.rotation = r;
             var i = 0,
@@ -420,82 +426,82 @@ _.extend(Game.prototype, {
             blocks[b.x][b.y] = b;
         });
 
-        //var fallDistance = 0,
-        //    lines = [],
-        //    nLines = 0,
-        //    baseLineDestroyed = false,
-        //    x, y, explode;
-        //for (y = this.height - 1; y >= 0; y--) {
-        //    explode = true;
-        //    for (x = 0; x < this.width; x++) {
-        //        if (!blocks[x][y]) {
-        //            explode = false;
-        //            break;
-        //        }
-        //    }
-        //
-        //    if (explode) {
-        //        if (y === this.height -1) {
-        //            baseLineDestroyed = true;
-        //        }
-        //        lines[nLines] = y;
-        //        nLines++;
-        //    }
-        //}
-        //
-        //var lineBlocks = [];
-        //for (y = this.height - 1; y >= 0; y--) {
-        //    explode = true;
-        //    for (x = 0; x < this.width; x++) {
-        //        if (blocks[x][y]) {
-        //            explode = false;
-        //            break;
-        //        }
-        //    }
-        //
-        //    if (explode) {
-        //        for (x = 0; x < this.width; x++) {
-        //            lineBlocks.push(blocks[x][y]);
-        //            blocks[x][y] = null;
-        //        }
-        //        fallDistance++;
-        //    } else if (fallDistance > 0) {
-        //        for (x = 0; x < width; x++) {
-        //            var b = blocks[x][y];
-        //            if (b) {
-        //                b.y += fallDistance;
-        //                blocks[b.x][b.y] = b;
-        //                blocks[x][y] = null;
-        //            }
-        //        }
-        //    }
-        //}
-        //
-        //var oldLevel = this.level;
-        //this.nLinesDestroyed += nLines;
-        //switch (nLines) {
-        //    case 0:
-        //        break;
-        //    case 1:
-        //        this.score += 40 * this.level;
-        //        break;
-        //    case 2:
-        //        this.score += 100 * this.level;
-        //        break;
-        //    case 3:
-        //        this.score += 300 * this.level;
-        //        break;
-        //    case 4:
-        //        this.score += 1200 * this.level;
-        //        break;
-        //}
-        //if (baseLineDestroyed) {
-        //    this.score += 10000 * this.level;
-        //}
-        //if (this.level !== oldLevel) {
-        //    this._setupDropTimer();
-        //}
-        this.emit('shape_landed');//, lines, lineBlocks);
+        var fallDistance = 0,
+            lines = [],
+            nLines = 0,
+            baseLineDestroyed = false,
+            x, y, explode;
+        for (y = this.height - 1; y >= 0; y--) {
+            explode = true;
+            for (x = 0; x < this.width; x++) {
+                if (!blocks[x][y]) {
+                    explode = false;
+                    break;
+                }
+            }
+
+            if (explode) {
+                if (y === this.height -1) {
+                    baseLineDestroyed = true;
+                }
+                lines[nLines] = y;
+                nLines++;
+            }
+        }
+
+        var lineBlocks = [];
+        for (y = this.height - 1; y >= 0; y--) {
+            explode = true;
+            for (x = 0; x < this.width; x++) {
+                if (!blocks[x][y]) {
+                    explode = false;
+                    break;
+                }
+            }
+
+            if (explode) {
+                for (x = 0; x < this.width; x++) {
+                    lineBlocks.push(blocks[x][y]);
+                    blocks[x][y] = null;
+                }
+                fallDistance++;
+            } else if (fallDistance > 0) {
+                for (x = 0; x < this.width; x++) {
+                    var b = blocks[x][y];
+                    if (b) {
+                        b.y += fallDistance;
+                        blocks[b.x][b.y] = b;
+                        blocks[x][y] = null;
+                    }
+                }
+            }
+        }
+
+        var oldLevel = this.level;
+        this.nLinesDestroyed += nLines;
+        switch (nLines) {
+            case 0:
+                break;
+            case 1:
+                this.score += 40 * this.level;
+                break;
+            case 2:
+                this.score += 100 * this.level;
+                break;
+            case 3:
+                this.score += 300 * this.level;
+                break;
+            case 4:
+                this.score += 1200 * this.level;
+                break;
+        }
+        if (baseLineDestroyed) {
+            this.score += 10000 * this.level;
+        }
+        if (this.level !== oldLevel) {
+            this._setupDropTimer();
+        }
+        this.emit('shape_landed', lines, lineBlocks);
         this.shape = null;
     }
 });
