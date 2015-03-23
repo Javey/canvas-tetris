@@ -6,6 +6,7 @@ var BLOCK_WIDTH = 15;
 var GameView = function(game) {
     this.game = game;
     this.stage = null;
+    this.shape = null;
     this.blockGraphics = [];
     this.init();
     this._bindEvent();
@@ -74,10 +75,13 @@ GameView.prototype = {
         this.game.addListener('add_shape', function() {
             self._addShape();
         });
+        this.game.addListener('shape_dropped', function() {
+            self._shapeDropped();
+        })
     },
 
     _addShape: function() {
-        var shape = new PIXI.DisplayObjectContainer();
+        var shape = this.shape = new PIXI.DisplayObjectContainer();
         this.stage.addChild(shape);
         shape.x = this.game.shape.x * BLOCK_WIDTH;
         shape.y = this.game.shape.y * BLOCK_WIDTH;
@@ -87,6 +91,10 @@ GameView.prototype = {
             blockGraphics.x = block.x * BLOCK_WIDTH;
             blockGraphics.y = block.y * BLOCK_WIDTH;
         }, this);
+    },
+
+    _shapeDropped: function() {
+        this.shape.y = this.game.shape.y * BLOCK_WIDTH;
     }
 };
 

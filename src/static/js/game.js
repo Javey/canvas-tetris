@@ -1,164 +1,164 @@
 var _ = require('lodash'),
     EventEmitter = require('eventEmitter');
 
-global.NCOLORS = 8;
+global.NCOLORS = 7;
 
 var blockTable = [
-        /* *** */
-        /* *   */
-        0, 0, 0, 0,
-        1, 1, 1, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
+    /* *** */
+    /* *   */
+    0, 0, 0, 0,
+    1, 1, 1, 0,
+    1, 0, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
 
-        0, 0, 1, 0,
-        1, 1, 1, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    0, 0, 1, 0,
+    1, 1, 1, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        1, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    1, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        /* *** */
-        /*   * */
-        0, 0, 0, 0,
-        1, 1, 1, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 0,
+    /* *** */
+    /*   * */
+    0, 0, 0, 0,
+    1, 1, 1, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 0,
 
-        0, 1, 1, 0,
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 1, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        1, 0, 0, 0,
-        1, 1, 1, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    1, 0, 0, 0,
+    1, 1, 1, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        1, 1, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    1, 1, 0, 0,
+    0, 0, 0, 0,
 
-        /* *** */
-        /*  *  */
-        0, 0, 0, 0,
-        1, 1, 1, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    /* *** */
+    /*  *  */
+    0, 0, 0, 0,
+    1, 1, 1, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        0, 1, 1, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 1, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        1, 1, 1, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    1, 1, 1, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        1, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    1, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        /*  ** */
-        /* **  */
+    /*  ** */
+    /* **  */
 
-        0, 0, 0, 0,
-        0, 1, 1, 0,
-        1, 1, 0, 0,
-        0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 1, 1, 0,
+    1, 1, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        0, 1, 1, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 1, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 0,
 
-        0, 1, 1, 0,
-        1, 1, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 1, 0,
+    1, 1, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        1, 0, 0, 0,
-        1, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    1, 0, 0, 0,
+    1, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        /* **  */
-        /*  ** */
+    /* **  */
+    /*  ** */
 
-        0, 0, 0, 0,
-        1, 1, 0, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0,
+    0, 0, 0, 0,
+    1, 1, 0, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
 
-        0, 0, 1, 0,
-        0, 1, 1, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 0,
+    0, 0, 1, 0,
+    0, 1, 1, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
 
-        1, 1, 0, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    1, 1, 0, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        1, 1, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
+    0, 1, 0, 0,
+    1, 1, 0, 0,
+    1, 0, 0, 0,
+    0, 0, 0, 0,
 
-        /* **** */
-        0, 0, 0, 0,
-        1, 1, 1, 1,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    /* **** */
+    0, 0, 0, 0,
+    1, 1, 1, 1,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
 
-        0, 0, 0, 0,
-        1, 1, 1, 1,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+    0, 0, 0, 0,
+    1, 1, 1, 1,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 1, 0, 0,
-        0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
+    0, 1, 0, 0,
 
-        /* ** */
-        /* ** */
-        0, 0, 0, 0,
-        0, 1, 1, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0,
+    /* ** */
+    /* ** */
+    0, 0, 0, 0,
+    0, 1, 1, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
 
-        0, 0, 0, 0,
-        0, 1, 1, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 1, 1, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
 
-        0, 0, 0, 0,
-        0, 1, 1, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 1, 1, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
 
-        0, 0, 0, 0,
-        0, 1, 1, 0,
-        0, 1, 1, 0,
-        0, 0, 0, 0
-    ];
+    0, 0, 0, 0,
+    0, 1, 1, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0
+];
 
 var Block = function(x, y, color) {
     this.x  = x;
@@ -203,6 +203,8 @@ var Game = function(options) {
         return this.startingLevel + this.nLinesDestroyed / 10;
     });
 
+    this._dropTimer = null;
+
     this._hasStarted = false;
     this._paused = false;
     this.__defineGetter__('pause', function() {
@@ -246,32 +248,34 @@ _.extend(Game.prototype, {
             for (var y = 0; y < options.lines; y++) {
                 //console.log(y >= (options.lines - options.filledLines))
                 //if (y >= (options.lines - options.filledLines) && x !== blank && _.random(0, 10) < options.fillProb) {
-                    this.blocks[x][y] = new Block(x, y, _.random(0, NCOLORS - 1));
+                //    this.blocks[x][y] = new Block(x, y, _.random(0, NCOLORS - 1));
                 //} else {
-                //    this.blocks[x][y] = null;
+                    this.blocks[x][y] = null;
                 //}
             }
         }
-        this.nextShape = this.pickRandomShape();
+        this.nextShape = this._pickRandomShape();
     },
 
     start: function() {
         this._hasStarted = true;
-        this.addShape();
+        this._addShape();
+        this._setupDropTimer();
     },
 
-    addShape: function() {
+    _addShape: function() {
         this.shape = this.nextShape.copy();
-        this.nextShape = this.pickRandomShape();
+        this.nextShape = this._pickRandomShape();
 
         this.emit('add_shape');
     },
 
-    pickRandomShape: function() {
-        return this.makeShape(_.random(0, NCOLORS - 1), _.random(0, 4));
+    _pickRandomShape: function() {
+        return this._makeShape(_.random(0, NCOLORS - 1), _.random(0, 4));
     },
 
-    makeShape: function(type, rotation) {
+    _makeShape: function(type, rotation) {
+        console.log(type, rotation);
         var shape = new Shape();
         shape.type = type;
         shape.rotation = rotation;
@@ -300,6 +304,163 @@ _.extend(Game.prototype, {
         shape.y = -minHeight;
 
         return shape;
+    },
+
+    _setupDropTimer: function() {
+        var timestep = Math.round(80 + 800 * Math.pow(0.75, this.level - 1));
+        timestep = Math.max(10, timestep);
+        if (this._dropTimer) {
+            clearInterval(this._dropTimer);
+            this._dropTimer = null;
+        }
+        if (!this._paused) {
+            this._dropTimer = setInterval(_.bind(function() {
+                if (!this._moveShape(0, 1, 0)) {
+                    this._landShape();
+                    this._addShape();
+                }
+            }, this), timestep);
+        }
+    },
+
+    _moveShape: function(xStep, yStep, rStep) {
+        if (!this.shape) return false;
+        this._rotateShape(rStep);
+        var canMove = true;
+        _.find(this.shape.blocks, function(block) {
+            var x = this.shape.x + xStep + block.x,
+                y = this.shape.y + yStep + block.y;
+            if (x < 0 || x > this.width || y >= this.height || this.blocks[x][y]) {
+                canMove = false;
+                return true;
+            }
+            return false;
+        }, this);
+
+        if (canMove) {
+            this.shape.x += xStep;
+            this.shape.y += yStep;
+            if (xStep) {
+                this.emit('shape_moved');
+            } else if (yStep > 0) {
+                this.emit('shape_dropped');
+            } else {
+                this.emit('shape_rotated');
+            }
+        } else {
+            this._rotateShape(-rStep);
+        }
+
+        return canMove;
+    },
+
+    _rotateShape: function(rStep) {
+        var shape = this.shape;
+        var r = shape.rotation + rStep;
+        r = (4 + rStep % 4) % 4;
+        if (r !== shape.rotation) {
+            shape.rotation = r;
+            var i = 0,
+                b = shape.blocks[i],
+                offset = shape.type * 64 + r * 16;
+            for (var x = 0; x < 4; x++) {
+                for (var y = 0; y < 4; y++) {
+                    if (blockTable[offset + y * 4 + x]) {
+                        b.x = x;
+                        b.y = y;
+                        b = shape.blocks[++i];
+                    }
+                }
+            }
+        }
+    },
+
+    _landShape: function() {
+        var shape = this.shape,
+            blocks = this.blocks;
+        shape.blocks.forEach(function(b) {
+            b.x += shape.x;
+            b.y += shape.y;
+            blocks[b.x][b.y] = b;
+        });
+
+        var fallDistance = 0,
+            lines = [],
+            nLines = 0,
+            baseLineDestroyed = false,
+            x, y, explode;
+        for (y = this.height - 1; y >= 0; y--) {
+            explode = true;
+            for (x = 0; x < this.width; x++) {
+                if (!blocks[x][y]) {
+                    explode = false;
+                    break;
+                }
+            }
+
+            if (explode) {
+                if (y === this.height -1) {
+                    baseLineDestroyed = true;
+                }
+                lines[nLines] = y;
+                nLines++;
+            }
+        }
+
+        var lineBlocks = [];
+        for (y = this.height - 1; y >= 0; y--) {
+            explode = true;
+            for (x = 0; x < this.width; x++) {
+                if (blocks[x][y]) {
+                    explode = false;
+                    break;
+                }
+            }
+
+            if (explode) {
+                for (x = 0; x < this.width; x++) {
+                    lineBlocks.push(blocks[x][y]);
+                    blocks[x][y] = null;
+                }
+                fallDistance++;
+            } else if (fallDistance > 0) {
+                for (x = 0; x < width; x++) {
+                    var b = blocks[x][y];
+                    if (b) {
+                        b.y += fallDistance;
+                        blocks[b.x][b.y] = b;
+                        blocks[x][y] = null;
+                    }
+                }
+            }
+        }
+
+        var oldLevel = this.level;
+        this.nLinesDestroyed += nLines;
+        switch (nLines) {
+            case 0:
+                break;
+            case 1:
+                this.score += 40 * this.level;
+                break;
+            case 2:
+                this.score += 100 * this.level;
+                break;
+            case 3:
+                this.score += 300 * this.level;
+                break;
+            case 4:
+                this.score += 1200 * this.level;
+                break;
+        }
+        if (baseLineDestroyed) {
+            this.score += 10000 * this.level;
+        }
+        if (this.level !== oldLevel) {
+            this._setupDropTimer();
+        }
+        this.emit('shape_landed', lines, lineBlocks);
+        this.shape = null;
     }
 });
 
