@@ -72,12 +72,46 @@ GameView.prototype = {
 
     _bindEvent: function() {
         var self = this;
-        this.game.addListener('add_shape', function() {
-            self._addShape();
-        });
-        this.game.addListener('shape_dropped', function() {
-            self._shapeDropped();
-        })
+        this.game
+            .addListener('add_shape', function() { self._addShape(); })
+            .addListener('shape_dropped', function() { self._shapeDropped(); })
+            .addListener('shape_moved', function() { self._shapeMoved(); })
+            .addListener('shape_landed', function() {
+                self.stage.removeChildren();
+                for (i = 0; i < self.game.width; i++) {
+                    for (var j = 0; j < self.game.height; j++) {
+                        //console.log(this.game.blocks[i][j]);
+                        var block = self.game.blocks[i][j];
+                        if (block) {
+                            var _blockGraphics = new BlockGraphics(block.color);
+                            _blockGraphics.x = block.x * BLOCK_WIDTH;
+                            _blockGraphics.y = block.y * BLOCK_WIDTH;
+                            self.stage.addChild(_blockGraphics)
+                        }
+                    }
+                }
+            })
+        window.addEventListener('keydown', function(e) {
+            switch (e.keyCode) {
+                case 37:
+                    self.game.moveLeft();
+                    break;
+                case 38:
+                    self.game.rotateLeft();
+                    break;
+                case 39:
+                    self.game.moveRight();
+                    break;
+                case 40:
+                    self.game.moveDown(true);
+                    break;
+            }
+        }, false);
+        window.addEventListener('keyup', function(e) {
+            if (e.keyCode === 40) {
+                self.game.moveDown(false);
+            }
+        }, false)
     },
 
     _addShape: function() {
@@ -95,6 +129,10 @@ GameView.prototype = {
 
     _shapeDropped: function() {
         this.shape.y = this.game.shape.y * BLOCK_WIDTH;
+    },
+
+    _shapeMoved: function() {
+        this.shape.x = this.game.shape.x * BLOCK_WIDTH;
     }
 };
 

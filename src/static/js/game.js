@@ -205,6 +205,9 @@ var Game = function(options) {
 
     this._dropTimer = null;
 
+    this._fastForward = false;
+
+
     this._hasStarted = false;
     this._paused = false;
     this.__defineGetter__('pause', function() {
@@ -244,23 +247,47 @@ _.extend(Game.prototype, {
         this.blocks = new Array(options.columns);
         for (var x = 0; x < options.columns; x++) {
             this.blocks[x] = new Array(options.lines);
-            var blank = _.random(0, options.columns);
-            for (var y = 0; y < options.lines; y++) {
+            //var blank = _.random(0, options.columns);
+            //for (var y = 0; y < options.lines; y++) {
                 //console.log(y >= (options.lines - options.filledLines))
                 //if (y >= (options.lines - options.filledLines) && x !== blank && _.random(0, 10) < options.fillProb) {
                 //    this.blocks[x][y] = new Block(x, y, _.random(0, NCOLORS - 1));
                 //} else {
-                    this.blocks[x][y] = null;
+                //    this.blocks[x][y] = null;
                 //}
-            }
+            //}
         }
         this.nextShape = this._pickRandomShape();
+        //this.nextShape = this._makeShape(0, 0);
     },
 
     start: function() {
         this._hasStarted = true;
         this._addShape();
         this._setupDropTimer();
+    },
+
+    moveLeft: function() {
+        return this._moveShape(-1, 0, 0);
+    },
+
+    moveRight: function() {
+        return this._moveShape(1, 0, 0);
+    },
+
+    moveDown: function(enable) {
+        if (this._fastForward === enable || this.gameOver) return;
+        if (enable && !this._moveShape(0, 1, 0)) return;
+        this._fastForward = enable;
+        this._setupDropTimer();
+    },
+
+    rotateLeft: function() {
+        return this._moveShape(0, 0, -1);
+    },
+
+    rotateRight: function() {
+        return this._moveShape(0, 0, 1);
     },
 
     _addShape: function() {
@@ -271,7 +298,7 @@ _.extend(Game.prototype, {
     },
 
     _pickRandomShape: function() {
-        return this._makeShape(_.random(0, NCOLORS - 1), _.random(0, 4));
+        return this._makeShape(_.random(0, NCOLORS - 1), _.random(0, 3));
     },
 
     _makeShape: function(type, rotation) {
@@ -285,23 +312,27 @@ _.extend(Game.prototype, {
             maxWidth = 0,
             minHeight = 4,
             maxHeight = 0;
+        console.log(offset);
         for (var x = 0; x < 4; x++) {
             for (var y = 0; y < 4; y++) {
-                if (blockTable[offset + y * 4 + x] === 0) {
+                console.log('x: ', x, 'y: ', y, blockTable[offset + y * 4 + x]);
+                if (!blockTable[offset + y * 4 + x]) {
                     continue;
                 }
                 minWidth = Math.min(x, minWidth);
                 maxWidth = Math.max(x + 1, maxWidth);
                 minHeight = Math.min(y, minHeight);
-                maxHeight = Math.min(y + 1, maxHeight);
+                maxHeight = Math.max(y + 1, maxHeight);
 
                 var b = new Block(x, y, type);
+                console.log(x, y, b);
                 shape.blocks.push(b);
             }
         }
         var blockWidth = maxWidth - minWidth;
         shape.x = Math.floor((this.width - blockWidth) / 2) - minWidth;
         shape.y = -minHeight;
+        console.log(shape);
 
         return shape;
     },
@@ -309,6 +340,11 @@ _.extend(Game.prototype, {
     _setupDropTimer: function() {
         var timestep = Math.round(80 + 800 * Math.pow(0.75, this.level - 1));
         timestep = Math.max(10, timestep);
+
+        if (this._fastForward) {
+            timestep = 80;
+        }
+
         if (this._dropTimer) {
             clearInterval(this._dropTimer);
             this._dropTimer = null;
@@ -330,7 +366,7 @@ _.extend(Game.prototype, {
         _.find(this.shape.blocks, function(block) {
             var x = this.shape.x + xStep + block.x,
                 y = this.shape.y + yStep + block.y;
-            if (x < 0 || x > this.width || y >= this.height || this.blocks[x][y]) {
+            if (x < 0 || x >= this.width || y >= this.height || (this.blocks[x] && this.blocks[x][y])) {
                 canMove = false;
                 return true;
             }
@@ -384,82 +420,82 @@ _.extend(Game.prototype, {
             blocks[b.x][b.y] = b;
         });
 
-        var fallDistance = 0,
-            lines = [],
-            nLines = 0,
-            baseLineDestroyed = false,
-            x, y, explode;
-        for (y = this.height - 1; y >= 0; y--) {
-            explode = true;
-            for (x = 0; x < this.width; x++) {
-                if (!blocks[x][y]) {
-                    explode = false;
-                    break;
-                }
-            }
-
-            if (explode) {
-                if (y === this.height -1) {
-                    baseLineDestroyed = true;
-                }
-                lines[nLines] = y;
-                nLines++;
-            }
-        }
-
-        var lineBlocks = [];
-        for (y = this.height - 1; y >= 0; y--) {
-            explode = true;
-            for (x = 0; x < this.width; x++) {
-                if (blocks[x][y]) {
-                    explode = false;
-                    break;
-                }
-            }
-
-            if (explode) {
-                for (x = 0; x < this.width; x++) {
-                    lineBlocks.push(blocks[x][y]);
-                    blocks[x][y] = null;
-                }
-                fallDistance++;
-            } else if (fallDistance > 0) {
-                for (x = 0; x < width; x++) {
-                    var b = blocks[x][y];
-                    if (b) {
-                        b.y += fallDistance;
-                        blocks[b.x][b.y] = b;
-                        blocks[x][y] = null;
-                    }
-                }
-            }
-        }
-
-        var oldLevel = this.level;
-        this.nLinesDestroyed += nLines;
-        switch (nLines) {
-            case 0:
-                break;
-            case 1:
-                this.score += 40 * this.level;
-                break;
-            case 2:
-                this.score += 100 * this.level;
-                break;
-            case 3:
-                this.score += 300 * this.level;
-                break;
-            case 4:
-                this.score += 1200 * this.level;
-                break;
-        }
-        if (baseLineDestroyed) {
-            this.score += 10000 * this.level;
-        }
-        if (this.level !== oldLevel) {
-            this._setupDropTimer();
-        }
-        this.emit('shape_landed', lines, lineBlocks);
+        //var fallDistance = 0,
+        //    lines = [],
+        //    nLines = 0,
+        //    baseLineDestroyed = false,
+        //    x, y, explode;
+        //for (y = this.height - 1; y >= 0; y--) {
+        //    explode = true;
+        //    for (x = 0; x < this.width; x++) {
+        //        if (!blocks[x][y]) {
+        //            explode = false;
+        //            break;
+        //        }
+        //    }
+        //
+        //    if (explode) {
+        //        if (y === this.height -1) {
+        //            baseLineDestroyed = true;
+        //        }
+        //        lines[nLines] = y;
+        //        nLines++;
+        //    }
+        //}
+        //
+        //var lineBlocks = [];
+        //for (y = this.height - 1; y >= 0; y--) {
+        //    explode = true;
+        //    for (x = 0; x < this.width; x++) {
+        //        if (blocks[x][y]) {
+        //            explode = false;
+        //            break;
+        //        }
+        //    }
+        //
+        //    if (explode) {
+        //        for (x = 0; x < this.width; x++) {
+        //            lineBlocks.push(blocks[x][y]);
+        //            blocks[x][y] = null;
+        //        }
+        //        fallDistance++;
+        //    } else if (fallDistance > 0) {
+        //        for (x = 0; x < width; x++) {
+        //            var b = blocks[x][y];
+        //            if (b) {
+        //                b.y += fallDistance;
+        //                blocks[b.x][b.y] = b;
+        //                blocks[x][y] = null;
+        //            }
+        //        }
+        //    }
+        //}
+        //
+        //var oldLevel = this.level;
+        //this.nLinesDestroyed += nLines;
+        //switch (nLines) {
+        //    case 0:
+        //        break;
+        //    case 1:
+        //        this.score += 40 * this.level;
+        //        break;
+        //    case 2:
+        //        this.score += 100 * this.level;
+        //        break;
+        //    case 3:
+        //        this.score += 300 * this.level;
+        //        break;
+        //    case 4:
+        //        this.score += 1200 * this.level;
+        //        break;
+        //}
+        //if (baseLineDestroyed) {
+        //    this.score += 10000 * this.level;
+        //}
+        //if (this.level !== oldLevel) {
+        //    this._setupDropTimer();
+        //}
+        this.emit('shape_landed');//, lines, lineBlocks);
         this.shape = null;
     }
 });
