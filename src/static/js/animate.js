@@ -51,4 +51,23 @@ _.each( baseEasings, function( easeIn, name ) {
     };
 });
 
-module.exports = easing;
+module.exports = function(func, duration, ease, callback) {
+    if (_.isFunction(ease)) {
+        callback = ease;
+        ease = 'linear';
+    } else if (_.isEmpty(ease)) {
+        ease = 'linear';
+    }
+    var start = Date.now();
+    var tick = function() {
+        var remain = Math.max(0, start + duration - Date.now()),
+            percent = 1 - easing[ease](remain / duration);
+        func(percent);
+        if (percent !== 1) {
+            requestAnimationFrame(tick);
+        } else {
+            callback && callback();
+        }
+    };
+    tick();
+};

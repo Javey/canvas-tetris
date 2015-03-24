@@ -162,13 +162,6 @@ var blockTable = [
 
 var Block = function(x, y, color) {
     this.x = x;
-    //this.__defineSetter__('x', function(value) {
-    //    console.log('set x');
-    //    this._x = value;
-    //});
-    //this.__defineGetter__('x', function() {
-    //    return this._x;
-    //});
     this.y = y;
     this.color = color
 };
@@ -207,7 +200,7 @@ var Game = function(options) {
     this.score = 0;
     this.startingLevel = 1;
     this.__defineGetter__('level', function() {
-        return this.startingLevel + this.nLinesDestroyed / 10;
+        return this.startingLevel + Math.floor(this.nLinesDestroyed / 10);
     });
 
     this._dropTimer = null;
@@ -288,7 +281,25 @@ _.extend(Game.prototype, {
         this.shape = this.nextShape.copy();
         this.nextShape = this._pickRandomShape();
 
-        this.emit('add_shape');
+        for (var i = 0, l = this.shape.blocks.length; i < l; i++) {
+            var b = this.shape.blocks[i];
+            var x = this.shape.x + b.x,
+                y = this.shape.y + b.y;
+            if (y >= 0 && this.blocks[x][y] != null) {
+                if (this._dropTimer) {
+                    clearInterval(this._dropTimer);
+                    this._dropTimer = null;
+                }
+                this.shape = null;
+                this.gameOver = true;
+
+                this.emit('game_over');
+
+                return;
+            }
+        }
+
+        this.emit('shape_added');
     },
 
     _pickRandomShape: function() {
@@ -480,9 +491,9 @@ _.extend(Game.prototype, {
                 this.score += 1200 * this.level;
                 break;
         }
-        if (baseLineDestroyed) {
-            this.score += 10000 * this.level;
-        }
+        //if (baseLineDestroyed) {
+        //    this.score += 10000 * this.level;
+        //}
         if (this.level !== oldLevel) {
             this._setupDropTimer();
         }
