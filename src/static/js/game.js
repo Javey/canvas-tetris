@@ -239,25 +239,13 @@ _.extend(Game.prototype, {
     init: function(options) {
         options = _.defaults({
             lines: 20,
-            columns: 14,
-            filledLines: 0,
-            fillProb: 5
+            columns: 14
         }, options);
         this.blocks = new Array(options.columns);
         for (var x = 0; x < options.columns; x++) {
             this.blocks[x] = new Array(options.lines);
-            //var blank = _.random(0, options.columns);
-            //for (var y = 0; y < options.lines; y++) {
-                //console.log(y >= (options.lines - options.filledLines))
-                //if (y >= (options.lines - options.filledLines) && x !== blank && _.random(0, 10) < options.fillProb) {
-                //    this.blocks[x][y] = new Block(x, y, _.random(0, NCOLORS - 1));
-                //} else {
-                //    this.blocks[x][y] = null;
-                //}
-            //}
         }
         this.nextShape = this._pickRandomShape();
-        //this.nextShape = this._makeShape(6, 1);
     },
 
     start: function() {
@@ -297,7 +285,7 @@ _.extend(Game.prototype, {
     },
 
     _pickRandomShape: function() {
-        return this._makeShape(6, 1);//_.random(0, NCOLORS - 1), _.random(0, 3));
+        return this._makeShape(_.random(0, NCOLORS - 1), _.random(0, 3));
     },
 
     _makeShape: function(type, rotation) {

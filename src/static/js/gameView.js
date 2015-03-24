@@ -1,9 +1,8 @@
-var Game = require('./game'),
-    PIXI = require('pixi.js'),
+var PIXI = require('pixi.js'),
     _ = require('lodash'),
     easing = require('./easing');
 
-var BLOCK_WIDTH = 15;
+var BLOCK_WIDTH = 20;
 
 var animate = function(func, duration, ease, callback) {
     if (_.isFunction(ease)) {
@@ -99,19 +98,22 @@ GameView.prototype = {
     },
 
     _shapeDropped: function() {
-        var start = this.shape.y,
-            end = this.game.shape.y * BLOCK_WIDTH;
-        animate(function(percent) {
-            this.shape.y = start + (end - start) * percent;
-        }.bind(this), 60, 'easeInQuad')
+        (function(shape, y) {
+            var start = shape.y,
+                end = y * BLOCK_WIDTH;
+            animate(function(percent) {
+                shape.y = start + (end - start) * percent;
+            }, 60, 'easeInQuad')
+        })(this.shape, this.game.shape.y);
     },
 
     _shapeMoved: function() {
-        var start = this.shape.x,
+        var shape = this.shape,
+            start = shape.x,
             end = this.game.shape.x * BLOCK_WIDTH;
         animate(function(percent) {
-            this.shape.x = start + (end - start) * percent;
-        }.bind(this), 60, 'easeInQuad')
+            shape.x = start + (end - start) * percent;
+        }, 60, 'easeInQuad')
     },
 
     _shapeRotated: function() {
