@@ -277,6 +277,13 @@ _.extend(Game.prototype, {
         return this._moveShape(0, 0, 1);
     },
 
+    drop: function() {
+        if (this.shape) {
+            while (this._moveShape(0, 1, 0)) {}
+            this._fallTimeout();
+        }
+    },
+
     _addShape: function() {
         this.shape = this.nextShape.copy();
         this.nextShape = this._pickRandomShape();
@@ -332,12 +339,14 @@ _.extend(Game.prototype, {
             this._dropTimer = null;
         }
         if (!this._paused) {
-            this._dropTimer = setInterval(_.bind(function() {
-                if (!this._moveShape(0, 1, 0)) {
-                    this._landShape();
-                    this._addShape();
-                }
-            }, this), timestep);
+            this._dropTimer = setInterval(this._fallTimeout.bind(this), timestep);
+        }
+    },
+
+    _fallTimeout: function() {
+        if (!this._moveShape(0, 1, 0)) {
+            this._landShape();
+            this._addShape();
         }
     },
 

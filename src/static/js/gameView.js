@@ -72,6 +72,9 @@ GameView.prototype = {
                     self.game.moveDown(true);
                     break;
                 case 32: // space
+                    self.game.drop();
+                    break;
+                case 13: // enter
                     self.game.pause = !self.game.pause;
                     break;
             }
@@ -154,7 +157,7 @@ GameView.prototype = {
                             return function(percent) {
                                 block.graphics.y = start + (end - start) * percent;
                             }
-                        })(block), 300 * Math.sqrt(this.game.nLinesDestroyed), 'easeInBounce');
+                        })(block), 500, 'easeInBounce');
                     }
                 }
             }
