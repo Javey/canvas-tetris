@@ -1,13 +1,35 @@
 var Game = require('./game'),
-    PIXI = require('pixi.js');
+    PIXI = require('pixi.js'),
+    _ = require('lodash'),
+    easing = require('./easing');
 
 var BLOCK_WIDTH = 15;
+
+var animate = function(func, duration, ease, callback) {
+    if (_.isFunction(ease)) {
+        callback = ease;
+        ease = 'linear';
+    } else if (_.isEmpty(ease)) {
+        ease = 'linear';
+    }
+    var start = Date.now();
+    var tick = function() {
+        var remain = Math.max(0, start + duration - Date.now()),
+            percent = 1 - easing[ease](remain / duration);
+        func(percent);
+        if (percent !== 1) {
+            requestAnimationFrame(tick);
+        } else {
+            callback && callback();
+        }
+    };
+    tick();
+};
 
 var GameView = function(game) {
     this.game = game;
     this.stage = null;
     this.shape = null;
-    this.blockGraphics = [];
     this.init();
     this._bindEvent();
 };
@@ -20,48 +42,6 @@ GameView.prototype = {
         document.body.appendChild(renderer.view);
 
         var stage = this.stage = new PIXI.Stage();
-
-        // create a new graphics object
-        //var graphics = new PIXI.Graphics();
-
-        // begin a green fill..
-        //graphics.beginFill(0x00FF00);
-
-        // draw a triangle using lines
-        //graphics.moveTo(100,0);
-        //graphics.lineTo(50, 100);
-        //graphics.lineTo(150, 100);
-
-        // end the fill
-        //graphics.endFill();
-        // add it the stage so we see it on our screens..
-        //stage.addChild(graphics);
-
-        // set the fill
-        //graphics.beginFill(0xFFFF00);
-
-        //var test = new PIXI.DisplayObjectContainer();
-
-        for (var i = 0; i < NCOLORS; i++) {
-            var blockGraphics = new BlockGraphics(i);
-            this.blockGraphics.push(blockGraphics);
-            blockGraphics.x = i * BLOCK_WIDTH;
-            //blockGraphics.y = i * BLOCK_WIDTH;
-            //stage.addChild(blockGraphics);
-        }
-
-        for (i = 0; i < this.game.width; i++) {
-            for (var j = 0; j < this.game.height; j++) {
-                //console.log(this.game.blocks[i][j]);
-                var block = this.game.blocks[i][j];
-                if (block) {
-                    var _blockGraphics = new BlockGraphics(block.color);
-                    _blockGraphics.x = block.x * BLOCK_WIDTH;
-                    _blockGraphics.y = block.y * BLOCK_WIDTH;
-                    //stage.addChild(_blockGraphics)
-                }
-            }
-        }
 
         function animate() {
             requestAnimationFrame(animate);
@@ -79,7 +59,6 @@ GameView.prototype = {
             .addListener('shape_rotated', this._shapeRotated.bind(this))
             .addListener('shape_landed', this._shapeLanded.bind(this))
         window.addEventListener('keydown', function(e) {
-            console.log(e.keyCode);
             switch (e.keyCode) {
                 case 37: // left
                     self.game.moveLeft();
@@ -120,11 +99,19 @@ GameView.prototype = {
     },
 
     _shapeDropped: function() {
-        this.shape.y = this.game.shape.y * BLOCK_WIDTH;
+        var start = this.shape.y,
+            end = this.game.shape.y * BLOCK_WIDTH;
+        animate(function(percent) {
+            this.shape.y = start + (end - start) * percent;
+        }.bind(this), 60, 'easeInQuad')
     },
 
     _shapeMoved: function() {
-        this.shape.x = this.game.shape.x * BLOCK_WIDTH;
+        var start = this.shape.x,
+            end = this.game.shape.x * BLOCK_WIDTH;
+        animate(function(percent) {
+            this.shape.x = start + (end - start) * percent;
+        }.bind(this), 60, 'easeInQuad')
     },
 
     _shapeRotated: function() {
@@ -135,18 +122,41 @@ GameView.prototype = {
     },
 
     _shapeLanded: function(lines, lineBlocks) {
+        this.shape.removeChildren();
+        this.shape = null;
+
+        this.game.shape.blocks.forEach(function(block) {
+            block.graphics.x = block.x * BLOCK_WIDTH;
+            block.graphics.y = block.y * BLOCK_WIDTH;
+            this.stage.addChild(block.graphics)
+        }, this);
+
         lineBlocks.forEach(function(block) {
-            var n = 0,
-                timer;
-            timer = setInterval(function() {
-                block.graphics.alpha = 1 - 1 / 60 * n;
-                block.graphics.scale = new PIXI.Point(1 + 1 / 60 * n, 1 + 1 / 60 * n);
-                n++;
-                if (n > 60) {
-                    clearInterval(timer);
+            block.graphics.pivot = new PIXI.Point(2, 2);
+            animate(function(percent) {
+                block.graphics.alpha = 1 + (0 - 1) * percent;
+                block.graphics.scale = new PIXI.Point(1 + (2 - 1) * percent, 1 + (2 - 1) * percent);
+            }, 500, 'easeInQuint', function() {
+                block.graphics = null;
+            });
+        });
+
+        if (lines.length) {
+            for (var x = 0; x < this.game.width; x++) {
+                for (var y = 0; y < this.game.height; y++) {
+                    var block = this.game.blocks[x][y];
+                    if (block) {
+                        animate((function(block) {
+                            var start = block.graphics.y,
+                                end = block.y * BLOCK_WIDTH;
+                            return function(percent) {
+                                block.graphics.y = start + (end - start) * percent;
+                            }
+                        })(block), 300 * Math.sqrt(this.game.nLinesDestroyed), 'easeInBounce');
+                    }
                 }
-            }, 1000 / 60);
-        })
+            }
+        }
     }
 };
 

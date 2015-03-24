@@ -227,13 +227,6 @@ var Game = function(options) {
         }
     });
 
-    this.__defineGetter__('shadowY', function() {
-        if (!this.shape) return 0;
-        //var d = 0,
-        //    g = thiscopy()
-        console.log('shadowY');
-    });
-
     this.gameOver = false;
 
     this.init(options);
@@ -263,8 +256,8 @@ _.extend(Game.prototype, {
                 //}
             //}
         }
-        //this.nextShape = this._pickRandomShape();
-        this.nextShape = this._makeShape(0, 1);
+        this.nextShape = this._pickRandomShape();
+        //this.nextShape = this._makeShape(6, 1);
     },
 
     start: function() {
@@ -304,11 +297,10 @@ _.extend(Game.prototype, {
     },
 
     _pickRandomShape: function() {
-        return this._makeShape(_.random(0, NCOLORS - 1), _.random(0, 3));
+        return this._makeShape(6, 1);//_.random(0, NCOLORS - 1), _.random(0, 3));
     },
 
     _makeShape: function(type, rotation) {
-        console.log(type, rotation);
         var shape = new Shape();
         shape.type = type;
         shape.rotation = rotation;
@@ -318,10 +310,8 @@ _.extend(Game.prototype, {
             maxWidth = 0,
             minHeight = 4,
             maxHeight = 0;
-        console.log(offset);
         for (var x = 0; x < 4; x++) {
             for (var y = 0; y < 4; y++) {
-                console.log('x: ', x, 'y: ', y, blockTable[offset + y * 4 + x]);
                 if (!blockTable[offset + y * 4 + x]) {
                     continue;
                 }
@@ -331,14 +321,12 @@ _.extend(Game.prototype, {
                 maxHeight = Math.max(y + 1, maxHeight);
 
                 var b = new Block(x, y, type);
-                console.log(x, y, b);
                 shape.blocks.push(b);
             }
         }
         var blockWidth = maxWidth - minWidth;
         shape.x = Math.floor((this.width - blockWidth) / 2) - minWidth;
         shape.y = -minHeight;
-        console.log(shape);
 
         return shape;
     },
