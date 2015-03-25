@@ -6,4 +6,4 @@
 
 浏览器直接打开`dist/index.html`
 
-!["游戏界面"](/static/images/game.png "游戏界面")
+![游戏界面](/static/images/game.png "游戏界面")
